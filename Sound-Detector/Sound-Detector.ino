@@ -151,6 +151,8 @@ void loop()
       send_json("Test");
     }
     ///////////////////////////////////////////////////////////////
+    delay(10000);
+    send_json("Test");
   }
   else
   {
@@ -165,5 +167,5 @@ void loop()
       timer += 100;
     }
   }
-  delay (2000);
+  delay (500);
 }
