@@ -10,25 +10,24 @@ int timer = 0;
 String a;
 
 ///////////////////////////////////////////////////////////////
-int sensorpin = A0;   // analog
-int ledpin = D0;
 int sensorvalue = 0;
 ///////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////
 int led = D0;  // digital
+int sensorpin = A0;   // analog
 int buttonpin = D1;
 int val = 0;
 ///////////////////////////////////////////////////////////////
 
 const char* ssid = "Sky 2.4g";
 const char* pass = "itisasecret";
-const char* host = "https://sound-detector.herokuapp.com/bot.php";//change this to your linebot server ex.http://numpapick-linebot.herokuapp.com/bot.php
+const char* host = "http://sound-detector.herokuapp.com/bot.php";//change this to your linebot server ex.http://numpapick-linebot.herokuapp.com/bot.php
 
 #define APPID "SoundDetector"
 #define KEY "q9UMtyMo7ZIczmD"
 #define SECRET  "G3C0Avh24MZSHavztZv0D3OKx"
-#define ALIAS "nodemcu"  // Alias of this nodemcu
+#define ALIAS "sounbd"  // Alias of this nodemcu
 
 //Freeboard
 #define TOPIC "/sounbd/" ALIAS // topic name
@@ -46,6 +45,22 @@ void onMsghandler(char *topic, uint8_t* msg, unsigned int msglen) {
     Serial.println((char *)msg);
     // Handle message
     String msgLINE = (char *)msg;
+    
+    //////////////////////////////////////////////////////////////////////////
+    //             Control manually by use command LINE ON or OFF.          //
+    //////////////////////////////////////////////////////////////////////////
+    
+    if (msgLINE == "Open" || msgLINE == "OPEN" || msgLINE == "open")
+    {
+      digitalWrite (D0, HIGH);
+      send_json ("Wall Opened"); // Show message "Turn on LED" from line
+    }
+    if (msgLINE == "Close")
+    {
+      digitalWrite (D0, LOW);
+      send_json ("Wall Closed"); // Show message "Turn off LED" from line
+    }
+   
 }
 
 void onConnected(char *attribute, uint8_t* msg, unsigned int msglen) {
@@ -84,18 +99,16 @@ void send_json(String data) {
 
 void setup() 
 {
-  ///////////////////////////////////////////////////////////////
-  pinMode (ledpin, OUTPUT); // analog
-  ///////////////////////////////////////////////////////////////
+  microgear.on(MESSAGE,onMsghandler);
+  microgear.on(CONNECTED,onConnected);
+  Serial.begin(115200);
 
   ///////////////////////////////////////////////////////////////
   pinMode (led, OUTPUT); // digital
   pinMode (buttonpin, INPUT);
+  pinMode (sensorpin, INPUT);
   ///////////////////////////////////////////////////////////////
   
-  microgear.on(MESSAGE,onMsghandler);
-  microgear.on(CONNECTED,onConnected);
-  Serial.begin(115200);
   WiFi.begin(ssid, pass);
   while (WiFi.status() != WL_CONNECTED) 
   {
@@ -113,59 +126,58 @@ void setup()
 
 void loop() 
 {
-  if (microgear.connected()) {
-    // Publish to a topic
-    String a = String(buttonpin);
-    microgear.publish(TOPIC, a); // Broadcast string message to the TOPIC
-    microgear.loop();
-    String b = String("{\"buttonpin\"} : " + a + ")"); // Make JSON format i.e. {"sound : 50 dB"}
-    microgear.writeFeed(FEEDNAME, b, FEEDKEY);
-    microgear.loop();
-
-    // Serial.println ("NETPIE is connecting!");
-    // Serial.println ("b");
-
-    ///////////////////////////////////////////////////////////////
-    sensorvalue = analogRead (sensorpin); // analog
-    digitalWrite (ledpin, HIGH);
-    delay (sensorvalue);
-    digitalWrite (ledpin, LOW);
-    delay (sensorvalue);
-    Serial.println (sensorvalue, DEC);
-    ///////////////////////////////////////////////////////////////
-
-    ///////////////////////////////////////////////////////////////
-    val = digitalRead (buttonpin); // digital
-    if (val)
+    Serial.println(notify_count);
+        if (digitalRead(buttonpin))
     {
-      digitalWrite (led, HIGH);
+      Serial.println(val);
       notify_count++;
     }
-    else
-    {
-      digitalWrite (led, LOW);
-    }
+    
     if (notify_count == 10)
     {
       notify_count = 0;
-      send_json("Test");
+      String message = "%E0%B8%9E%E0%B9%88%E0%B8%AD%E0%B8%9E%E0%B8%B1%E0%B8%99%E0%B8%98%E0%B8%B8%E0%B9%8C%E0%B8%9B%E0%B8%A5%E0%B8%B2%20%E0%B9%81%E0%B8%A5%E0%B8%B0%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B8%9E%E0%B8%B1%E0%B8%99%E0%B8%98%E0%B8%B8%E0%B9%8C%E0%B8%9B%E0%B8%A5%E0%B8%B2%E0%B8%9E%E0%B8%A3%E0%B9%89%E0%B8%AD%E0%B8%A1%E0%B8%9C%E0%B8%AA%E0%B8%A1%E0%B8%9E%E0%B8%B1%E0%B8%99%E0%B8%98%E0%B8%B8%E0%B9%8C%E0%B9%81%E0%B8%A5%E0%B9%89%E0%B8%A7%E0%B8%95%E0%B9%89%E0%B8%AD%E0%B8%87%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B9%80%E0%B8%9B%E0%B8%B4%E0%B8%94%E0%B8%9C%E0%B8%99%E0%B8%B1%E0%B8%87%E0%B8%81%E0%B8%B1%E0%B8%99%E0%B8%99%E0%B9%89%E0%B8%B3%E0%B8%AB%E0%B8%A3%E0%B8%B7%E0%B8%AD%E0%B9%80%E0%B8%9B%E0%B8%A5%E0%B9%88%E0%B8%B2%20%3F%20%E0%B8%95%E0%B9%89%E0%B8%AD%E0%B8%87%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B9%80%E0%B8%9B%E0%B8%B4%E0%B8%94%E0%B8%9C%E0%B8%99%E0%B8%B1%E0%B8%87%E0%B8%81%E0%B8%B1%E0%B9%89%E0%B8%99%E0%B8%99%E0%B9%89%E0%B8%B3%E0%B9%83%E0%B8%AB%E0%B9%89%E0%B8%9E%E0%B8%B4%E0%B8%A1%E0%B8%9E%E0%B9%8C%20%27%E0%B9%80%E0%B8%9B%E0%B8%B4%E0%B8%94%27%20%E0%B8%95%E0%B9%89%E0%B8%AD%E0%B8%87%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B9%83%E0%B8%AB%E0%B9%89%E0%B8%9B%E0%B8%B4%E0%B8%94%E0%B8%9C%E0%B8%99%E0%B8%B1%E0%B8%87%E0%B8%81%E0%B8%B1%E0%B9%89%E0%B8%99%E0%B8%99%E0%B9%89%E0%B8%B3%E0%B8%9E%E0%B8%B4%E0%B8%A1%E0%B8%9E%E0%B9%8C%20%27%E0%B8%9B%E0%B8%B4%E0%B8%94%27";
+      send_json(message); // When count == 10 line sent message "Test" to user
     }
-    ///////////////////////////////////////////////////////////////
-    delay(10000);
-    send_json("Test");
-  }
-  else
-  {
-    Serial.println ("NETPIE is reconnecting...");
-    if (timer >= 5000)
-    {
-      microgear.connect (APPID);
-      timer = 0;
-    }
-    else
-    {
-      timer += 100;
-    }
-  }
-  delay (500);
+
+    delay (50);
+    
+  // if (microgear.connected()) {
+  //   // Publish to a topic
+  //   String a = String(buttonpin);
+  //   microgear.publish(TOPIC, a); // Broadcast string message to the TOPIC
+  //   microgear.loop();
+  //   String b = String("{\"buttonpin\"} : " + a + ")"); // Make JSON format i.e. {"sound : 50 dB"}
+  //   microgear.writeFeed(FEEDNAME, b, FEEDKEY);
+  //   microgear.loop();
+
+  //   // Serial.println ("NETPIE is connecting!");
+  //   // Serial.println ("b");
+
+  //   //////////////////////////////////////////////////////////////////////////
+  //   //      Control Automatically by itself and sent message to user.       //
+  //   //////////////////////////////////////////////////////////////////////////
+    
+  //   ///////////////////////////////////////////////////////////////
+  //     val = digitalRead (sensorpin); // digital
+  //   Serial.println(val);
+
+  //   ///////////////////////////////////////////////////////////////
+   
+    
+  // }
+  // else
+  // {
+  //   Serial.println ("NETPIE is reconnecting...");
+  //   if (timer >= 5000)
+  //   {
+  //     microgear.connect (APPID);
+  //     timer = 0;
+  //   }
+  //   else
+  //   {
+  //     timer += 100;
+  //   }
+  // } 
+  // delay (100);
 }
