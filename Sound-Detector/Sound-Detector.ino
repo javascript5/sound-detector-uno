@@ -27,8 +27,8 @@ int val = 0;
 bool checkConnected = false;
 ///////////////////////////////////////////////////////////////
 
-const char *ssid = "Sky 2.4g";
-const char *pass = "itisasecret";
+const char *ssid = "pleng";
+const char *pass = "pleng1234";
 const char *host = "http://sound-detector.herokuapp.com/bot.php"; //change this to your linebot server ex.http://numpapick-linebot.herokuapp.com/bot.php
 
 #define APPID "SoundDetector"
